@@ -15,7 +15,7 @@ class animalCardController {
     const animalCard = await animalCards.create({
       photo: photo,
       animal: animal,
-      aviarynumber: aviary_number,
+      aviary_number: aviary_number,
       birthday: birthday,
       moniker: moniker,
       description: description,
@@ -32,7 +32,7 @@ class animalCardController {
     res.json();
   }
 
-  async getAnimals(req, res) {
+  async getAnimals(res) {
     const animalCardsAll = await animalCards.findAll({
       include: [
         {

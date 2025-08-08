@@ -2,9 +2,9 @@ const { animals } = require("../db");
 
 class animalController {
   async add(req, res) {
-    const { type, description } = req.body;
+    const { kind_of_animal, description } = req.body;
     const animal = await animals.create({
-      kind_of_animal: type,
+      kind_of_animal: kind_of_animal,
       description: description,
       removed: 0,
     });

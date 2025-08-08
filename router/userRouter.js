@@ -7,4 +7,7 @@ router.post("/authorization", userController.authorization);
 router.delete("/delete", userController.deleteProfile);
 router.get("/get", userController.getUsers);
 
+router.post("/requestResetPassword", userController.requestResetPassword);
+router.post("/confirmResetPassword", userController.confirmResetPassword);
+
 module.exports = router;

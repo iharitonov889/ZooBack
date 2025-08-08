@@ -1,11 +1,15 @@
 const { users } = require("../db");
 const bcrypt = require("bcrypt");
+const { requestResetPassword } = require("../mailer.js");
+
+const { parserForEmail } = require("../db/redis");
 
 class userController {
   async registration(req, res) {
     const { name, email, password, phone } = req.body;
     const _user = await users.findOne({ where: { email: email } });
-    if (_user) return res.status(404).json({ error: "E-mail is used" });
+    if (_user)
+      return res.status(404).json({ error: "User already registered" });
     const hashPassword = await bcrypt.hash(password, 5);
     const user = await users.create({
       name: name,
@@ -33,9 +37,33 @@ class userController {
     res.json();
   }
 
-  async getUsers(req, res) {
+  async getUsers(res) {
     const usersAll = await users.findAll({});
     res.json({ usersAll });
+  }
+
+  async requestResetPassword(req, res) {
+    const { email } = req.body;
+    const existingUser = await users.findOne({ where: { email } });
+    if (!existingUser)
+      return res
+        .status(404)
+        .json({ error: "User not found, password cant be reseted" });
+    await requestResetPassword(email);
+    res.json();
+  }
+
+  async confirmResetPassword(req, res) {
+    const { otp, newPassword } = req.body;
+    const email = await parserForEmail(otp);
+    if (!email)
+      return res.status(404).json({ error: "User or Code not found" });
+    const existingUser = await users.findOne({ where: { email } });
+
+    const hashedPassword = await bcrypt.hash(newPassword, 5);
+    existingUser.password = hashedPassword;
+    await existingUser.save();
+    res.json();
   }
 }
 
