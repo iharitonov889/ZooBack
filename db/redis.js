@@ -1,24 +1,29 @@
-import redis from "redis";
+import { createClient } from "redis";
 
-const redisClient = redis.createClient({
-  host: process.env.API_REDIS_HOST,
-  port: process.env.API_REDIS_PORT,
+const client = createClient({
+  username: process.env.API_REDIS_USERNAME,
+  password: process.env.API_REDIS_PASSWORD,
+  socket: {
+    host: process.env.API_REDIS_SOCKET_HOST,
+    port: process.env.API_REDIS_SOCKET_PORT,
+  },
 });
-redisClient.on("connect", () => console.log("Redis: Connection successful"));
-redisClient.on("error", () => console.log("Redis: An error occurred"));
-redisClient.connect();
+
+client.connect();
+client.on("connect", () => console.log("Redis: Connection successful"));
+client.on("error", (err) => console.log("Redis Client Error", err));
 
 const storeOtp = async (email, otp) => {
   const id = Math.floor(100000 + Math.random() * 900000).toString();
   const k = `id:${id}`;
   const v = `email:${email}, otp:${otp}`;
-  await redisClient.set(k, v, { EX: 60 * 10 });
+  await client.set(k, v, { EX: 60 * 10 });
 };
 
 const parserForEmail = async (opt) => {
-  const keys = await redisClient.keys("id:*");
+  const keys = await client.keys("id:*");
   for (const key of keys) {
-    const value = await redisClient.get(key);
+    const value = await client.get(key);
     if (value) {
       try {
         const parts = value.split(", ");
@@ -44,7 +49,7 @@ const parserForEmail = async (opt) => {
 
 const delRedis = async (id) => {
   const k = `id:${id}`;
-  await redisClient.del(k);
+  await client.del(k);
 };
 
 export { storeOtp, parserForEmail, delRedis };
