@@ -9,5 +9,6 @@ router.get("/get", userController.getUsers);
 
 router.post("/requestResetPassword", userController.requestResetPassword);
 router.post("/confirmResetPassword", userController.confirmResetPassword);
+router.post("/resetPassword", userController.resetPassword);
 
 module.exports = router;

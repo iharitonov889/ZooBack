@@ -2,7 +2,12 @@ const { users } = require("../db");
 const bcrypt = require("bcrypt");
 const { requestResetPassword } = require("../mailer.js");
 
-const { parserForEmail } = require("../db/redis");
+const {
+  parserForEmail,
+  confirmOtp,
+  parserForConfirm,
+  parserForNoCopy,
+} = require("../db/redis");
 
 class userController {
   async registration(req, res) {
@@ -54,16 +59,42 @@ class userController {
   }
 
   async confirmResetPassword(req, res) {
-    const { otp, newPassword } = req.body;
-    const email = await parserForEmail(otp);
-    if (!email)
-      return res.status(404).json({ error: "User or Code not found" });
+    const { email, otp } = req.body;
+
     const existingUser = await users.findOne({ where: { email } });
+    if (!existingUser) return res.status(404).json({ error: "User not found" });
+
+    const existingOtp = await parserForEmail(otp);
+    if (!existingOtp) return res.status(404).json({ error: "Code not found" });
+
+    await parserForNoCopy(email);
+    await confirmOtp(email);
+    res.json();
+  }
+  async resetPassword(req, res) {
+    const { email, newPassword } = req.body;
+    const existingUser = await users.findOne({ where: { email } });
+    if (!existingUser)
+      return res
+        .status(404)
+        .json({ error: "User not found, password cant be reseted" });
+
+    const confirmed = await parserForConfirm(email);
+    if (!confirmed)
+      return res
+        .status(404)
+        .json({ error: "User's OTP code is not confirmed" });
+
+    await parserForNoCopy(email);
 
     const hashedPassword = await bcrypt.hash(newPassword, 5);
     existingUser.password = hashedPassword;
     await existingUser.save();
-    res.json();
+    return res.status(200).json({
+      message:
+        "You succesfully changed password, now you can login using your new password",
+    });
+    //res.json();
   }
 }
 

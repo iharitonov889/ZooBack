@@ -19,6 +19,12 @@ const storeOtp = async (email, otp) => {
   const v = `email:${email}, otp:${otp}`;
   await client.set(k, v, { EX: 60 * 10 });
 };
+const confirmOtp = async (email, otp) => {
+  const id = Math.floor(100000 + Math.random() * 900000).toString();
+  const k = `id:${id}`;
+  const v = `email:${email}, otp:confirmed`;
+  await client.set(k, v, { EX: 60 * 10 });
+};
 
 const parserForEmail = async (opt) => {
   const keys = await client.keys("id:*");
@@ -47,9 +53,62 @@ const parserForEmail = async (opt) => {
   return null;
 };
 
-const delRedis = async (id) => {
-  const k = `id:${id}`;
-  await client.del(k);
+const parserForConfirm = async (email) => {
+  const keys = await client.keys("id:*");
+  for (const key of keys) {
+    const value = await client.get(key);
+    if (value) {
+      try {
+        const parts = value.split(", ");
+        const emailPart = parts.find((part) => part.startsWith("email:"));
+        const otpPart = parts.find((part) => part.startsWith("otp:"));
+
+        if (emailPart && otpPart) {
+          const redisEmail = emailPart.substring("email:".length);
+          const redisOtp = otpPart.substring("otp:".length);
+
+          if (redisEmail === email && redisOtp === "confirmed") {
+            return redisEmail;
+          }
+        }
+      } catch (error) {
+        console.error("Redis parsing for confirmation error:", error);
+      }
+    }
+  }
+
+  return null;
 };
 
-export { storeOtp, parserForEmail, delRedis };
+const parserForNoCopy = async (email) => {
+  const keys = await client.keys("id:*");
+  for (const key of keys) {
+    const value = await client.get(key);
+    if (value) {
+      try {
+        const parts = value.split(", ");
+        const emailPart = parts.find((part) => part.startsWith("email:"));
+        const otpPart = parts.find((part) => part.startsWith("otp:"));
+
+        if (emailPart && otpPart) {
+          const redisEmail = emailPart.substring("email:".length);
+          if (redisEmail === email) {
+            await client.del(key);
+          }
+        }
+      } catch (error) {
+        console.error("Redis parsing error:", error);
+      }
+    }
+  }
+
+  return null;
+};
+
+export {
+  storeOtp,
+  confirmOtp,
+  parserForEmail,
+  parserForConfirm,
+  parserForNoCopy,
+};

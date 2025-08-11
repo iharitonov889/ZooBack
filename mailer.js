@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 
-const { storeOtp } = require("./db/redis");
+const { storeOtp, parserForNoCopy } = require("./db/redis");
 
 const requestResetPassword = async (email) => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -20,6 +20,7 @@ const requestResetPassword = async (email) => {
       Please copy the following code, ${otp} and paste this to complete the process.\n
       If you did not request this, please ignore this email and your password will remain unchanged.\n`,
   };
+  await parserForNoCopy(email);
   await storeOtp(email, otp);
   await transporter.sendMail(mailOption);
 };
