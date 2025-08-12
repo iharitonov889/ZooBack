@@ -11,8 +11,8 @@ const storageConfig = multer.diskStorage({
     cb(null, "uploads");
   },
   filename: (req, photo, cb) => {
-    const uniqueSuffix = uuidv4(); // генерируем уникальный идентификатор
-    const fileExtension = photo.originalname.split(".").pop(); // расширение файла
+    const uniqueSuffix = uuidv4();
+    const fileExtension = photo.originalname.split(".").pop();
     const filename = `${uniqueSuffix}.${fileExtension}`;
     req.body.photo = filename;
     cb(null, filename);

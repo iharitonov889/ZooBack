@@ -32,7 +32,7 @@ class animalCardController {
     res.json();
   }
 
-  async getAnimals(res) {
+  async getAnimals(req, res) {
     const animalCardsAll = await animalCards.findAll({
       include: [
         {
