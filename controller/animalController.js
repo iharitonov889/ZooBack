@@ -24,7 +24,7 @@ class animalController {
   }
 
   async getAnimals(req, res) {
-    const animalsAll = await animals.findAll();
+    const animalsAll = await animals.findAll({ order: ["id", "ASC"] });
     res.json({ animalsAll });
   }
 

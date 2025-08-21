@@ -43,7 +43,7 @@ class userController {
   }
 
   async getUsers(req, res) {
-    const usersAll = await users.findAll({});
+    const usersAll = await users.findAll({ order: ["id", "ASC"] });
     res.json({ usersAll });
   }
 

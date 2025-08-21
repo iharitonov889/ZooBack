@@ -34,6 +34,7 @@ class animalCardController {
 
   async getAnimals(req, res) {
     const animalCardsAll = await animalCards.findAll({
+      order: ["id", "ASC"],
       include: [
         {
           model: animals,
